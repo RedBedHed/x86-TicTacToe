@@ -104,6 +104,7 @@ main:
     add rsp, 32
     pop rbx
     mov rax, 0
+    
     ret
 
 #############################
@@ -362,12 +363,13 @@ read:
     ret
 
 #############################
+
 negamax:
                                     # args:
-                                    # rdi - alliance 
-                                    # rsi - depth 
-                                    # rcx - alpha
-                                    # rdx - beta
+                                    # (1) rdi - alliance 
+                                    # (2) rsi - depth 
+                                    # (3) rcx - alpha
+                                    # (4) rdx - beta
 
     call hasVictory                 # if(hasVictory(Alliance)) {
     test al, al                     
@@ -398,10 +400,10 @@ negamax:
                                     # (1) rax - return value
                                     # (2) rbx - legal move board
                                     # (3) r11 - best move
-                                    # (3) r12 - high score
-                                    # (4) r13 - current move
-                                    # (5) r14 - temp
-                                    # (6) r15 - temp
+                                    # (4) r12 - high score
+                                    # (5) r13 - current move
+                                    # (6) r14 - temp
+                                    # (7) r15 - temp
 
     sub rsp, 40
     mov QWORD PTR  [rsp+0], rbx     # spill rbx
