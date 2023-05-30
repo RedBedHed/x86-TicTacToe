@@ -27,6 +27,8 @@ wins:
 .section .text
 .global main
 
+#############################
+
 main:
     push rbx
     sub rsp, 32
@@ -349,8 +351,6 @@ write:
 
 #############################
 
-#############################
-
 read:
 
     mov rdx, rsi
@@ -360,8 +360,6 @@ read:
     syscall
 
     ret
-
-#############################
 
 #############################
 negamax:
@@ -489,3 +487,5 @@ negamax:
     xor rdi, 1                      # alliance = swapAlliance(alliance);
 
     ret                             # return value;
+
+#############################
