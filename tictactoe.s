@@ -2,9 +2,6 @@
 
 .section .data
 
-board_mask:   .WORD 0x01FF
-board: .WORD 0, 0
-
 board_string: 
 .STRING " * | * | * \n---+---+---\n * | * | * \n---+---+---\n * | * | * \n" # 60
 
@@ -32,6 +29,9 @@ wins:
 main:
     push rbx
     sub rsp, 32
+
+    # r9 is the board
+    mov r9, 0
     
     inner_loop:
 
@@ -87,8 +87,7 @@ main:
 
     call print_board
 
-    lea rax, [rip+board]
-    mov DWORD PTR [rax], 0
+    mov r9, 0
 
     lea rdi, [rip+restart_string]
     mov rsi, 18
@@ -112,28 +111,15 @@ main:
 getBoard: 
     # (alliance rdi) -> rax
 
-    push rdi
+    push rcx
 
-    lea rax, [rip+board]
-    shl rdi, 1
-    movzx rax, WORD PTR [rax+rdi]
+    mov rcx, rdi
+    shl rcx, 4
+    mov rax, r9
+    shr eax, cl
+    and rax, 0x01FF
 
-    pop rdi
-
-    ret
-
-#############################
-
-setBoard: 
-    # (alliance rdi, board rsi) -> rax
-
-    push rdi
-
-    lea rax, [rip+board]
-    shl rdi, 1
-    mov WORD PTR [rax+rdi], si
-
-    pop rdi
+    pop rcx
 
     ret
 
@@ -145,14 +131,13 @@ setBoardSquare:
     push rbx
     push rcx
 
-    lea rcx, [rip+board]
-    shl rdi, 1
+    mov rcx, rdi
+    shl rcx, 4
     mov rbx, 0x0100
-    xchg rsi, rcx
-    shr rbx, cl
-    xchg rsi, rcx
-    xor WORD PTR [rcx+rdi], bx
-    shr rdi, 1
+    shl rbx, cl
+    mov rcx, rsi
+    shr ebx, cl
+    xor r9d, ebx
 
     pop rcx
     pop rbx
@@ -165,10 +150,9 @@ freeSquare:
 
     push rbx
 
-    lea rax, [rip+board]
-    mov bx, WORD PTR [rax]
-    mov ax, WORD PTR [rax+2]
-    or ax, bx
+    mov eax, r9d
+    shr eax, 16 
+    or ax, r9w
 
     mov rbx, 0x0100
     xchg rsi, rcx
@@ -184,14 +168,9 @@ freeSquare:
 
 getFullBoard: # () -> rax
 
-    push rbx
-
-    lea rax, [rip+board]
-    mov bx, WORD PTR [rax]
-    mov ax, WORD PTR [rax+2]
-    or ax, bx
-
-    pop rbx
+    mov eax, r9d
+    shr eax, 16 
+    or ax, r9w
 
     ret
 
@@ -199,16 +178,11 @@ getFullBoard: # () -> rax
 
 legalMoves: # () -> rax
 
-    push rbx
-
-    lea rax, [rip+board]
-    mov bx, WORD PTR [rax]
-    mov ax, WORD PTR [rax+2]
-    or ax, bx
+    mov eax, r9d
+    shr eax, 16 
+    or ax, r9w
     not ax
     and ax, 0x01FF
-
-    pop rbx
 
     ret
 
@@ -266,8 +240,6 @@ print_board:
 
     mov dil, 'x'
 
-    back:
-
     ploop:
     test bx, bx
     jz pbreak
@@ -291,7 +263,7 @@ print_board:
 
     mov dil, 'o'
 
-    jmp back
+    jmp ploop
     continue:
 
     #---------------------------
@@ -382,18 +354,19 @@ negamax:
 
     cont1:                          # }
 
-    xor rdi, 1                      # alliance = swapAlliance(alliance);
+
 
     call getFullBoard               # if(board.isFull()) {
     cmp ax, 0x01FF
     jne cont2
 
-    xor rdi, 1                      # alliance = swapAlliance(alliance);
     xor rax, rax                    # return 0;
 
     ret
 
     cont2:                          # }
+
+    xor rdi, 1                      # alliance = swapAlliance(alliance);
 
                                     #------------------------
                                     # Free Registers:
@@ -416,16 +389,16 @@ negamax:
     mov rbx, rax                    
     mov r12b, 0x80                  # highScore = INT8_MIN;
 
+    mov QWORD PTR [rsp+32], rdx     # spill beta
+
     moveloop1:                      # while(legalMoves) {
     test bx, bx
     jz return
-
-    mov QWORD PTR [rsp+32], rdx     # spill beta
     
     mov r13, rsi                    # temp = depth;
-    bsf r14, rbx                    # temp2 = bitScanForward(legalMoves);
+    bsf r8, rbx                    # temp2 = bitScanForward(legalMoves);
     mov rsi, 8                      # temp3 = 8;
-    sub rsi, r14                    # temp3 -= temp2;
+    sub rsi, r8                    # temp3 -= temp2;
     call setBoardSquare             # board.setSquare(temp3);
     xchg rsi, r13                   # depth = temp; move = temp3;
 
@@ -467,9 +440,9 @@ negamax:
     skipper:                        # }
                                     # }
 
-    mov r14w, bx                    # moveBoard &= moveBoard - 1; // pop lsb
+    mov r8w, bx                    # moveBoard &= moveBoard - 1; // pop lsb
     sub bx, 1
-    and bx, r14w
+    and bx, r8w
 
     jmp moveloop1                   # }
 
