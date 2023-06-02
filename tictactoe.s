@@ -396,9 +396,9 @@ negamax:
     jz return
     
     mov r13, rsi                    # temp = depth;
-    bsf r8, rbx                    # temp2 = bitScanForward(legalMoves);
+    bsf r8, rbx                     # temp2 = bitScanForward(legalMoves);
     mov rsi, 8                      # temp3 = 8;
-    sub rsi, r8                    # temp3 -= temp2;
+    sub rsi, r8                     # temp3 -= temp2;
     call setBoardSquare             # board.setSquare(temp3);
     xchg rsi, r13                   # depth = temp; move = temp3;
 
