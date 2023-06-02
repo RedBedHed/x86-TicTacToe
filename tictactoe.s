@@ -134,7 +134,7 @@ setBoardSquare:
     mov rcx, rdi
     shl rcx, 4
     mov rbx, 0x0100
-    shl rbx, cl
+    shl ebx, cl
     mov rcx, rsi
     shr ebx, cl
     xor r9d, ebx
