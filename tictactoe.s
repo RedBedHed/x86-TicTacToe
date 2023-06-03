@@ -115,16 +115,14 @@ main:
 
 getBoard: 
     # (alliance rdi) -> rax
-
-    push rcx
-
-    mov rcx, rdi
-    shl rcx, 4
+    
+    mov r8, rdi
+    shl r8, 4
     mov rax, r9
+    xchg r8, rcx
     shr eax, cl
+    xchg r8, rcx
     and rax, 0x01FF
-
-    pop rcx
 
     ret
 
@@ -133,19 +131,15 @@ getBoard:
 setBoardSquare: 
     # (alliance rdi, square rsi) -> rax
 
-    push rbx
-    push rcx
-
-    mov rcx, rdi
-    shl rcx, 4
-    mov rbx, 0x0100
-    shl ebx, cl
+    mov r8, rdi
+    shl r8, 4
+    mov r10, 0x0100
+    xchg r8, rcx
+    shl r10d, cl
     mov rcx, rsi
-    shr ebx, cl
-    xor r9d, ebx
-
-    pop rcx
-    pop rbx
+    shr r10d, cl
+    xchg r8, rcx
+    xor r9d, r10d
 
     ret
 
@@ -153,19 +147,15 @@ setBoardSquare:
 
 freeSquare:
 
-    push rbx
-
     mov eax, r9d
     shr eax, 16 
     or ax, r9w
 
-    mov rbx, 0x0100
+    mov r10, 0x0100
     xchg rsi, rcx
-    shr rbx, cl
+    shr r10, cl
     xchg rsi, rcx
-    and ax, bx 
-
-    pop rbx
+    and ax, r10w
 
     ret
 
@@ -196,25 +186,21 @@ legalMoves: # () -> rax
 hasVictory:
     # (alliance rdi) -> rax
 
-    push rcx
-    push rbx
-
     # Probe the magic win
     # table
 
     call getBoard
-    mov cx, ax
-    mov bx, 1
-    and cx, 7
-    shl bl, cl
+    mov r8w, ax
+    mov r10w, 1
+    and r8w, 7
+    xchg r8, rcx
+    shl r10b, cl
+    xchg r8, rcx
     shr ax, 3
-    lea rcx, [rip+wins]
-    mov al, BYTE PTR [rcx+rax] 
-    and al, bl
+    lea r8, [rip+wins]
+    mov al, BYTE PTR [r8+rax] 
+    and al, r10b
     mov ah, 0
-
-    pop rbx
-    pop rcx
 
     ret
 
@@ -380,8 +366,7 @@ negamax:
                                     # (3) r11 - best move
                                     # (4) r12 - high score
                                     # (5) r13 - current move
-                                    # (6) r14 - temp
-                                    # (7) r15 - temp
+                                    # (6) r8 - temp
 
     shl rbx, 8
     or  rbx, r11
