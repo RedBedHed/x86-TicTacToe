@@ -66,6 +66,11 @@ main:
     cmp ax, 0x01FF
     je inner_out
 
+    xor r11, r11
+    xor rbx, rbx
+    xor r12, r12
+    xor rdx, rdx
+    xor r13, r13
     mov rdi, 1
     mov rsi, 0
     mov cl, -127
@@ -378,18 +383,22 @@ negamax:
                                     # (6) r14 - temp
                                     # (7) r15 - temp
 
-    sub rsp, 40
-    mov QWORD PTR  [rsp+0], rbx     # spill rbx
-    mov QWORD PTR  [rsp+8], r11     # spill r11
-    mov QWORD PTR [rsp+16], r12     # spill r12
-    mov QWORD PTR [rsp+24], r13     # spill r13
+    shl rbx, 8
+    or  rbx, r11
+    shl rbx, 8
+    or rbx, r13
+    shl rbx, 8
+    or rbx, r12
+    shl rbx, 8
+    or rbx, rdx
+    push rbx                        # push rbx, rll, r13, r12, rdx
+
+    xor rbx, rbx
     xor r11, r11                    # bestMove = 0;
 
     call legalMoves                 # legalMoves = board.legalMoves();
     mov rbx, rax                    
-    mov r12b, 0x80                  # highScore = INT8_MIN;
-
-    mov QWORD PTR [rsp+32], rdx     # spill beta
+    mov r12, 0x80                   # highScore = INT8_MIN;
 
     moveloop1:                      # while(legalMoves) {
     test bx, bx
@@ -414,7 +423,8 @@ negamax:
 
     dec rsi                         # --depth;
 
-    mov rdx, QWORD PTR [rsp+32]     # restore beta
+    mov rdx, QWORD PTR [rsp]        # restore beta
+    and rdx, 0xFF
 
     xchg rsi, r13                   # board.setSquare(move);
     call setBoardSquare
@@ -452,12 +462,16 @@ negamax:
     xchg al, ah
     mov al, r12b
 
-    mov r13, QWORD PTR [rsp+24]     # restore r13
-    mov r12, QWORD PTR [rsp+16]     # restore r12
-    mov r11, QWORD PTR  [rsp+8]     # restore r11
-    mov rbx, QWORD PTR  [rsp+0]     # restore rbx
-
-    add rsp, 40                     
+    pop rdx                         # restore rbx, rll, r13, r12, rdx
+    mov rbx, rdx
+    movzx rdx, bl
+    shr rbx, 8
+    movzx r12, bl
+    shr rbx, 8
+    movzx r13, bl
+    shr rbx, 8
+    movzx r11, bl
+    shr rbx, 8
 
     xor rdi, 1                      # alliance = swapAlliance(alliance);
 
