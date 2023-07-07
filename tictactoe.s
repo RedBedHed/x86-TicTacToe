@@ -208,9 +208,9 @@ hasVictory:
 
 print_board:
 
-    sub rsp, 86
-    mov QWORD PTR [rsp+70], rbx
-    mov QWORD PTR [rsp+78], rcx
+    sub rsp, 26
+    mov QWORD PTR [rsp+10], rbx
+    mov QWORD PTR [rsp+18], rcx
 
     mov BYTE PTR [rsp+0], ' '
     mov BYTE PTR [rsp+1], ' '
@@ -295,9 +295,9 @@ print_board:
 
     #---------------------------
 
-    mov rcx, QWORD PTR [rsp+78]
-    mov rbx, QWORD PTR [rsp+70]
-    add rsp, 86
+    mov rcx, QWORD PTR [rsp+18]
+    mov rbx, QWORD PTR [rsp+10]
+    add rsp, 26
 
     ret
 
